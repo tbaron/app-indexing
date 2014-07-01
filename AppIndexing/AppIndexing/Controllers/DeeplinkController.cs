@@ -57,6 +57,7 @@ namespace AppIndexing.Controllers
             return links
                 .Concat(viewActions)
                 .Where(x => x.StartsWith("android-app://", StringComparison.OrdinalIgnoreCase))
+                .Distinct()
                 .ToArray();
         }
 
