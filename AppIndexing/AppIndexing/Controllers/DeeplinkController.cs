@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -17,6 +18,7 @@ namespace AppIndexing.Controllers
 
         private const int ConcurrentRequestLimit = 20;
         private readonly static SemaphoreSlim throttle = new SemaphoreSlim(ConcurrentRequestLimit);
+        private List<object> errors = new List<object>();
 
         [HttpPost]
         public async Task<DeeplinkResult> GetDeeplinksAsync([FromBody]DeeplinkRequest request)
@@ -31,6 +33,7 @@ namespace AppIndexing.Controllers
 
             return new DeeplinkResult
             {
+                Errors = errors.Count > 0 ? errors : null,
                 Links = results
             };
         }
@@ -110,6 +113,11 @@ namespace AppIndexing.Controllers
             try
             {
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+
+                ApplyCurrentRequest(request);
+
+                request.AllowAutoRedirect = true;
+
                 HttpWebResponse response;
 
                 try
@@ -135,6 +143,22 @@ namespace AppIndexing.Controllers
             finally
             {
                 throttle.Release();
+            }
+        }
+
+        private void ApplyCurrentRequest(HttpWebRequest request)
+        {
+            foreach (var header in this.Request.Headers)
+            foreach (var value in header.Value)
+            {
+                try
+                {
+                    request.Headers.Add(header.Key, value);
+                }
+                catch (Exception e)
+                {
+                    errors.Add(e.Message);
+                }
             }
         }
     }

@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace AppIndexing.Models
 {
@@ -6,5 +7,8 @@ namespace AppIndexing.Models
     {
         [JsonProperty("links")]
         public string[][] Links { get; set; }
+
+        [JsonProperty("errors")]
+        public ICollection<object> Errors { get; set; }
     }
 }
