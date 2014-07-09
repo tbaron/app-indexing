@@ -10,8 +10,5 @@ namespace AppIndexing.Models
 
         [JsonProperty("errors")]
         public ICollection<object> Errors { get; set; }
-
-        [JsonProperty("request")]
-        public DeeplinkRequest Request { get; set; }
     }
 }

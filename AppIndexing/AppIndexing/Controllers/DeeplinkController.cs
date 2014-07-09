@@ -34,7 +34,6 @@ namespace AppIndexing.Controllers
             return new DeeplinkResult
             {
                 Errors = errors.Count > 0 ? errors : null,
-                Request = request,
                 Links = results
             };
         }
@@ -116,8 +115,6 @@ namespace AppIndexing.Controllers
             {
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
 
-                //ApplyCurrentRequest(request);
-
                 request.AllowAutoRedirect = true;
 
                 HttpWebResponse response;
@@ -128,6 +125,8 @@ namespace AppIndexing.Controllers
                 }
                 catch (WebException e)
                 {
+                    errors.Add(e.Message);
+
                     response = e.Response as HttpWebResponse;
                 }
 
@@ -145,40 +144,6 @@ namespace AppIndexing.Controllers
             finally
             {
                 throttle.Release();
-            }
-        }
-
-        private readonly static Action<HttpWebRequest, string, string> NoAssignment = (request, name, value) => { };
-        private readonly static Action<HttpWebRequest, string, string> DefaultAssignment = (request, name, value) => request.Headers.Add(name, value);
-        private readonly static IDictionary<string, Action<HttpWebRequest, string, string>> requestParameterAssignments = new Dictionary<string, Action<HttpWebRequest, string, string>>(StringComparer.OrdinalIgnoreCase)
-        {
-            { "user-agent", (request, name, value) => request.UserAgent = value },
-            { "accept", (request, name, value) => request.Accept = value },
-            { "connection", NoAssignment },
-            { "host", NoAssignment },
-        };
-
-        private void ApplyCurrentRequest(HttpWebRequest request)
-        {
-            foreach (var header in this.Request.Headers)
-            {
-                Action<HttpWebRequest, string, string> assignment;
-                if (!requestParameterAssignments.TryGetValue(header.Key, out assignment))
-                {
-                    assignment = DefaultAssignment;
-                }
-
-                foreach (var value in header.Value)
-                {
-                    try
-                    {
-                        assignment(request, header.Key, value);
-                    }
-                    catch (Exception e)
-                    {
-                        errors.Add(e.Message);
-                    }
-                }
             }
         }
     }
