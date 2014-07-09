@@ -116,7 +116,7 @@ namespace AppIndexing.Controllers
             {
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
 
-                ApplyCurrentRequest(request);
+                //ApplyCurrentRequest(request);
 
                 request.AllowAutoRedirect = true;
 
