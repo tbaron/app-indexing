@@ -34,6 +34,7 @@ namespace AppIndexing.Controllers
             return new DeeplinkResult
             {
                 Errors = errors.Count > 0 ? errors : null,
+                Request = request,
                 Links = results
             };
         }
