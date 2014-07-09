@@ -148,18 +148,36 @@ namespace AppIndexing.Controllers
             }
         }
 
+        private readonly static Action<HttpWebRequest, string, string> NoAssignment = (request, name, value) => { };
+        private readonly static Action<HttpWebRequest, string, string> DefaultAssignment = (request, name, value) => request.Headers.Add(name, value);
+        private readonly static IDictionary<string, Action<HttpWebRequest, string, string>> requestParameterAssignments = new Dictionary<string, Action<HttpWebRequest, string, string>>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "user-agent", (request, name, value) => request.UserAgent = value },
+            { "accept", (request, name, value) => request.Accept = value },
+            { "connection", NoAssignment },
+            { "host", NoAssignment },
+        };
+
         private void ApplyCurrentRequest(HttpWebRequest request)
         {
             foreach (var header in this.Request.Headers)
-            foreach (var value in header.Value)
             {
-                try
+                Action<HttpWebRequest, string, string> assignment;
+                if (!requestParameterAssignments.TryGetValue(header.Key, out assignment))
                 {
-                    request.Headers.Add(header.Key, value);
+                    assignment = DefaultAssignment;
                 }
-                catch (Exception e)
+
+                foreach (var value in header.Value)
                 {
-                    errors.Add(e.Message);
+                    try
+                    {
+                        assignment(request, header.Key, value);
+                    }
+                    catch (Exception e)
+                    {
+                        errors.Add(e.Message);
+                    }
                 }
             }
         }
